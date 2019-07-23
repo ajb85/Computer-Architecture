@@ -2,18 +2,21 @@
 
 import sys
 
+ldi = 0b10000010
+prn = 0b01000111
+hlt = 0b00000001
+
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 8
+        self.pc = 0
+        self.ir = None
 
     def load(self):
         """Load a program into memory."""
-
-        address = 0
-
         # For now, we've just hardcoded a program:
 
         program = [
@@ -26,10 +29,27 @@ class CPU:
             0b00000001, # HLT
         ]
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        while True:
+            instruction = program[self.pc]
+            op_a = program[self.pc + 1] if self.pc + 1 < len(program) else None
+            op_b = program[self.pc + 2] if self.pc + 2 < len(program) else None
+            if(instruction == ldi):
+                print(f"Writing {op_b} to {op_a}")
+                self.ram_write(op_a, op_b)
+                self.pc += 2
+            if(instruction == prn):
+                self.ram_read(op_a)
+                print(self.ir)
+            if(instruction == hlt):
+                return
+            self.pc += 1
+            
 
+    def ram_read(self, address):
+        self.ir = self.ram[address]
+
+    def ram_write(self, address, value):
+        self.ram[address] = value
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""

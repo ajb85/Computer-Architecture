@@ -4,8 +4,12 @@ Actually runs the CPU emulator
 
 # cpu.py
 
-Contains the CPU emulator class. Right now a program is hardcoded into the CPU but we will soon load a file and get our instructions from there. Once it has the instructions, it loops over them one at a time.
+Contains the CPU emulator class. Loads, iterates over, and executes commands
 
-# examples
+# call.ls8
 
-Contain example instructions that we may end up loading into our CPU
+Example instructions including saving variables and calling variables
+
+# interrupts.ls8
+
+When X thing happens, stop and handle the thing
