@@ -12,4 +12,4 @@ Example instructions including saving variables and calling variables
 
 # interrupts.ls8
 
-When X thing happens, stop and handle the thing
+When X thing happens, stop and handle the thing (like a keystroke)
