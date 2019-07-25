@@ -11,6 +11,9 @@ ret = 0b00010001
 mul = 0b10100010
 push = 0b01000101
 pop = 0b01000110
+call = 0b01010000
+add = 0b10100000
+ret = 0b00010001
 
 class RAM:
     def __init__(self, size):
@@ -43,49 +46,71 @@ class RAM:
 class Commands:
     def __init__(self, cpu):
         self.list = {
-            ldi: self.ldi, 
+            ldi:self.ldi, 
             prn:self.prn, 
             hlt:self.hlt, 
             mul:self.mul, 
             push:self.push, 
-            pop:self.pop
+            pop:self.pop,
+            call:self.call,
+            add:self.add
         }
         self.cpu = cpu
 
-    def ldi(self):
+    def call(self):
         op_a = self.cpu.ram.read(self.cpu.pc + 1)
-        op_b = self.cpu.ram.read(self.cpu.pc + 2)
+        address = self.cpu.register[op_a]
+        while True:
+            instruction = self.cpu.ram.read(address)
+            if(instruction == ret or instruction == None):
+                return 1
+            inc = self.list[instruction](address+1, address+2)
+            address += inc + 1
+
+    def add(self, op_a=None, op_b=None):
+        op_a = self.cpu.ram.read(self.cpu.pc + 1) if op_a == None else self.cpu.ram.read(op_a)
+        op_b = self.cpu.ram.read(self.cpu.pc + 2) if op_b == None else self.cpu.ram.read(op_b)
+
+        self.cpu.register[op_a] += self.cpu.register[op_b]
+        return 2
+
+    def ldi(self, op_a=None, op_b=None):
+        op_a = self.cpu.ram.read(self.cpu.pc + 1) if op_a == None else self.cpu.ram.read(op_a)
+        op_b = self.cpu.ram.read(self.cpu.pc + 2) if op_b == None else self.cpu.ram.read(op_b)
         self.cpu.register[op_a] = op_b
         return 2
 
-    def prn(self):
-        op_a = self.cpu.ram.read(self.cpu.pc + 1)
+    def prn(self, op_a=None, op_b=None):
+        op_a = self.cpu.ram.read(self.cpu.pc + 1) if op_a == None else self.cpu.ram.read(op_a)
+        op_b = self.cpu.ram.read(self.cpu.pc + 2) if op_b == None else self.cpu.ram.read(op_b)
         print(self.cpu.register[op_a])
         return 1
         
-    def mul(self):
-        op_a = self.cpu.ram.read(self.cpu.pc + 1)
-        op_b = self.cpu.ram.read(self.cpu.pc + 2)
+    def mul(self, op_a=None, op_b=None):
+        op_a = self.cpu.ram.read(self.cpu.pc + 1) if op_a == None else self.cpu.ram.read(op_a)
+        op_b = self.cpu.ram.read(self.cpu.pc + 2) if op_b == None else self.cpu.ram.read(op_b)
         print(self.cpu.ram.read(op_a) * self.cpu.ram.read(op_b))
         return 2
 
-    def push(self):
-        op_a = self.cpu.ram.read(self.cpu.pc + 1)
+    def push(self, op_a=None, op_b=None):
+        op_a = self.cpu.ram.read(self.cpu.pc + 1) if op_a == None else self.cpu.ram.read(op_a)
+        op_b = self.cpu.ram.read(self.cpu.pc + 2) if op_b == None else self.cpu.ram.read(op_b)
         pointer = self.cpu.register[len(self.cpu.register) - 1]
         wasSuccessful = self.cpu.ram.push(pointer - 1, self.cpu.register[op_a])
         if(wasSuccessful):
             self.cpu.register[len(self.cpu.register) - 1] = pointer - 1
         return 1
 
-    def pop(self):
-        op_a = self.cpu.ram.read(self.cpu.pc + 1)
+    def pop(self, op_a=None, op_b=None):
+        op_a = self.cpu.ram.read(self.cpu.pc + 1) if op_a == None else self.cpu.ram.read(op_a)
+        op_b = self.cpu.ram.read(self.cpu.pc + 2) if op_b == None else self.cpu.ram.read(op_b)
         pointer = self.cpu.register[len(self.cpu.register) - 1]
         value = self.cpu.ram.pop(pointer)
         self.cpu.register[op_a] = value
         self.cpu.register[len(self.cpu.register) - 1] = pointer + 1
         return 1
 
-    def hlt(self):
+    def hlt(self, op_a=None, op_b=None):
         return self.cpu.ram.getSize()
 
 class CPU:
@@ -108,7 +133,7 @@ class CPU:
                 command = line.replace(" ", "")[:8]
                 if(self.isValidCommand(command)):
                     self.ram.write(i, int(command, 2))
-                i += 1
+                    i += 1
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
